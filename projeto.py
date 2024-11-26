@@ -9,7 +9,7 @@ from tkinter import messagebox
 conexao_banco = mysql.connector.connect(
     host  = '127.0.0.1',
     user = 'root',
-    password = 'rato',
+    password = '',
     database = 'psicologia'
 )
 cursor = conexao_banco.cursor()
@@ -222,45 +222,48 @@ def acao_cadastro_consultas(janela_cadastro):
     entry_duracao = tk.Entry(janelacadastroconsultas)
     entry_duracao.pack()
     ###########################
-    label_statusconsulta = tk.Label(janelacadastroconsultas , text='Insira o status da consulta (tratamento/inativo):', font=("Calibri (Corpo)", 11))
+    label_statusconsulta = tk.Label(janelacadastroconsultas , text='Insira o status da consulta (Confirmada/Cancelada/Realizada):', font=("Calibri (Corpo)", 11))
     label_statusconsulta.pack()
     entry_statusconsulta = tk.Entry(janelacadastroconsultas)
     entry_statusconsulta.pack()
 
     
     def funcaobotaoconsulta():
-        #global nome, pagamento, data, data_cancelamento, statusconsulta , duracao
         nome = entry_nomeconsulta.get()
         preco = entry_preco.get()
-        pagamento = entry_pagamento.get() #pagamento é se foi pago
-        data = entry_data.get() #nao pode ser igual
-         
-        statusconsulta = entry_statusconsulta.get() # nao pode ser igual 
+        pagamento = entry_pagamento.get()
+        data = entry_data.get()
+        statusconsulta = entry_statusconsulta.get()
         duracao = entry_duracao.get()
         
         if isANumber(preco):
             print('é um preco valido')
             preco = int(entry_preco.get())
-          
+        
+            # Primeira consulta - verificar se paciente existe
             comando_sql = f"SELECT nome from paciente WHERE nome = '{nome}'"
             cursor.execute(comando_sql)
-            resultado = cursor.fetchall()
+            resultado = cursor.fetchall()  # Importante: consume todos os resultados
+            
             if len(resultado) <= 0:
-                messagebox.showerror('Erro' , 'Paciente inexistente.')
+                messagebox.showerror('Erro', 'Paciente inexistente.')
             elif len(resultado) >= 1:
+                # Segunda consulta - pegar ids das consultas
                 comando_sql = f'SELECT idconsultas from consultas'
                 cursor.execute(comando_sql)
-                resultadoid = cursor.fetchall()
+                cursor.fetchall()  # Importante: consume todos os resultados aqui também
+                
                 if nome == '' or pagamento == '' or data == '' or statusconsulta == '' or duracao == '':
-                    messagebox.showerror('Erro' , 'Campos Vazios')
+                    messagebox.showerror('Erro', 'Campos Vazios')
                 else:
-                    comando_sql = f"INSERT INTO consultas ( idconsultas , status_consulta , data_cancelamento , duracao , data , pagamento , preço , nome ) values ( {resultadoid[-1][0]+1},'{statusconsulta}' , '2000-01-1 01:01:01' , '{duracao}' , '{data}' , '{pagamento}' , {preco} , '{nome}')"
+                    # Terceira consulta - inserir nova consulta
+                    comando_sql = f"INSERT INTO consultas (status_consulta, data_cancelamento, duracao, data, pagamento, preço, nome) VALUES ('{statusconsulta}', '2000-01-1 01:01:01', '{duracao}', '{data}', '{pagamento}', {preco}, '{nome}')"
                     cursor.execute(comando_sql)
                     conexao_banco.commit()
-                    messagebox.showinfo('Sucesso' , 'Consulta cadastrada com sucesso!')
+                    messagebox.showinfo('Sucesso', 'Consulta cadastrada com sucesso!')
 
-        elif isANumber(preco) == False:
-            messagebox.showerror('Erro' , 'Não é um valor valido, digite um numero.')
+        elif not isANumber(preco):
+            messagebox.showerror('Erro', 'Não é um valor valido, digite um numero.')
 
 
 
@@ -522,7 +525,7 @@ def excluir_psicologo(janela_excluir):
             messagebox.showerror("Erro", "Psicólogo não encontrado!")
             return
             
-        # Ask for confirmation
+        
         nome_psicologo = resultado[0]
         confirma = messagebox.askyesno("Confirmar Exclusão", f"Tem certeza que deseja excluir o psicólogo {nome_psicologo}?")
         
@@ -589,7 +592,7 @@ def excluir_consulta(janela_excluir):
                 
             except mysql.connector.Error as err:
                 messagebox.showerror("Erro", f"Erro ao excluir consulta: {err}")
-                conexao_banco.rollback()
+                conexao_banco.rollback() #basicamente desfaz o commit
 
     btn_confirmar = tk.Button(janela_excluir_consulta, text="Confirmar Exclusão", 
                              command=confirmar_exclusao)
@@ -924,7 +927,7 @@ def acao_atualizacao(janela_opcoes):
         entry_crp_psicologo = tk.Entry(janela)
         entry_crp_psicologo.pack()
 
-        tk.Label(janela, text="Nova Disponibilidade (Sim/Não):", font=("Calibri (Corpo)", 11)).pack()
+        tk.Label(janela, text="Nova Disponibilidade (Disponivel/Indisponivel):", font=("Calibri (Corpo)", 11)).pack()
         entry_disponibilidade = tk.Entry(janela)
         entry_disponibilidade.pack()
 
@@ -936,8 +939,8 @@ def acao_atualizacao(janela_opcoes):
                 messagebox.showerror("Erro", "CRP não pode estar vazio.")
                 return
 
-            if disponibilidade not in ["Sim", "Não"]:
-                messagebox.showerror("Erro", "Disponibilidade inválida. Use 'Sim' ou 'Não'.")
+            if disponibilidade not in ["Disponivel", "Indisponivel"]:
+                messagebox.showerror("Erro", "Disponibilidade inválida. Use 'Disponivel' ou 'Indisponivel'.")
                 return
 
             comandosql = f"UPDATE psicologos SET disponibilidade = '{disponibilidade}' WHERE crp = '{crp}'"
@@ -1003,6 +1006,8 @@ def botaonaoadd(janela_cadastro):
     conexao_banco.commit()
     messagebox.showinfo("Sucesso", "Paciente cadastrado com sucesso!")
     acao_cadastro_paciente(janela_cadastro)
+     
+    
                    
 def cadastropaciente(janela_cadastro):
     comandosql =f"INSERT INTO paciente (data_nascimento , email , status , telefone , endereco , cpf , nome , data_cadastro) values ('{data}' , '{email}' , '{status}',{telefone},'{endereco}',{cpf}, '{nome}' , '{dataAgoraCerta}')"
@@ -1074,6 +1079,7 @@ def cadastro(janela_opcoes):
 
     btn_cadastro_consulta = tk.Button(janela_cadastro, text="Cadastro Consultas", width=30, height=7, command=lambda : acao_cadastro_consultas(janela_cadastro))
     btn_cadastro_consulta.pack(pady=10)
+
 
     janela_cadastro.mainloop()
 
