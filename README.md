@@ -1,4 +1,5 @@
 PsicoDB
+
 PsicoDB é um banco de dados desenvolvido para gerenciar informações de uma clínica psicológica.
 Ele permite o cadastro, atualização, pesquisa e exclusão de informações relacionadas a pacientes, psicólogos e consultas.
 
