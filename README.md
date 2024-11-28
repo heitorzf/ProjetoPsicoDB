@@ -27,7 +27,9 @@ Remover colunas específicas das tabelas.
 
 ### Requisitos
 
-Para poder executar este projeto é necessário as bibliotecas do TKINTER , ttkbootstrap e mysql.connector, abaixo os comandos de instalações:
+Para executar este projeto, é necessário instalar as bibliotecas TKINTER, ttkbootstrap e mysql.connector.
+
+Abaixo estão os comandos de instalação:
 
 ```bash
 pip install tk
