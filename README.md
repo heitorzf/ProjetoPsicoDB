@@ -7,8 +7,10 @@ Ele permite o cadastro, atualização, pesquisa e exclusão de informações rel
 
 ### Cadastro:
 
-Paciente
+Paciente - Convênio
+
 Psicólogo
+
 Consultas
 
 ### Pesquisa:
